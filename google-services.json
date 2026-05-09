@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "259972367503",
+    "project_id": "waylo-a46d5",
+    "storage_bucket": "waylo-a46d5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259972367503:android:4f79e764323dd82b239cfa",
+        "android_client_info": {
+          "package_name": "com.andrea17473.waylo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "259972367503-ihimui7ms03um5gi9q1atqda80hssgu6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.andrea17473.waylo",
+            "certificate_hash": "b3a68d540e4d91786a380b19f17398430592f32c"
+          }
+        },
+        {
+          "client_id": "259972367503-p3f1pe2fhemi2muun3nt8tvkf9j3quqt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2GECiUSGhhkykasrEYQmvMJgaL_5iDD8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "259972367503-p3f1pe2fhemi2muun3nt8tvkf9j3quqt.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "259972367503-j0mhnqdhbi03tmid9nbpj5mbs1d4d6su.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.andrea17473.waylo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
