@@ -48,7 +48,8 @@ function AppContent() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="views/auth/Login" options={{ animation: 'none' }} />
-      <Stack.Screen name="+not-found" />
+      <Stack.Screen name="views/auth/Register" options={{ animation: 'none' }} />
+      <Stack.Screen name="not-found" />
     </Stack>
   );
 }
