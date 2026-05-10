@@ -52,10 +52,13 @@ const TabBarButton = ({ index, focusedIndex, onPress, onLongPress, label, routeN
     const handlePress = useCallback(() => onPress(index), [onPress, index]);
     const handleLongPress = useCallback(() => onLongPress(index), [onLongPress, index]);
 
-    const iconElement = useMemo(
-        () => icon[routeName as keyof typeof icon]({ color }),
-        [routeName, color]
-    );
+    const iconElement = useMemo(() => {
+        const renderIcon = icon[routeName as keyof typeof icon];
+        if (!renderIcon) {
+            return null;
+        }
+        return renderIcon({ color });
+    }, [routeName, color]);
 
     return (
         <Pressable onPress={handlePress} onLongPress={handleLongPress} style={styles.button}>
