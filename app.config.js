@@ -12,6 +12,7 @@ export default {
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     ios: {
+      buildNumber: '3',
       supportsTablet: false,
       bundleIdentifier: 'com.andrea17473.waylo',
       googleServicesFile: './GoogleService-Info.plist',
@@ -22,6 +23,7 @@ export default {
       },
     },
     android: {
+      versionCode: 3,
       adaptiveIcon: {
         backgroundColor: '#E6F4FE',
         foregroundImage: './assets/images/android-icon-foreground.png',
@@ -64,13 +66,7 @@ export default {
           },
         },
       ],
-      [
-        '@rnmapbox/maps',
-        {
-          "RNMapboxMapsImpl": "mapbox",
-          "RNMapboxMapsDownloadToken": process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN
-        }
-      ],
+      ['@rnmapbox/maps', { RNMapboxMapsImpl: 'mapbox' }],
       'expo-secure-store',
     ],
     experiments: {
