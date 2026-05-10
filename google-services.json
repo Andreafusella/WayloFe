@@ -1,45 +1,37 @@
 {
   "project_info": {
-    "project_number": "259972367503",
-    "project_id": "waylo-a46d5",
-    "storage_bucket": "waylo-a46d5.firebasestorage.app"
+    "project_number": "77126962059",
+    "project_id": "waylo-f3dc2",
+    "storage_bucket": "waylo-f3dc2.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:259972367503:android:4f79e764323dd82b239cfa",
+        "mobilesdk_app_id": "1:77126962059:android:041da197bf2190b0803d8e",
         "android_client_info": {
           "package_name": "com.andrea17473.waylo"
         }
       },
       "oauth_client": [
         {
-          "client_id": "259972367503-ihimui7ms03um5gi9q1atqda80hssgu6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.andrea17473.waylo",
-            "certificate_hash": "b3a68d540e4d91786a380b19f17398430592f32c"
-          }
-        },
-        {
-          "client_id": "259972367503-p3f1pe2fhemi2muun3nt8tvkf9j3quqt.apps.googleusercontent.com",
+          "client_id": "77126962059-b7er67ie3svi06qevdde8kih3f4heqb3.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD2GECiUSGhhkykasrEYQmvMJgaL_5iDD8"
+          "current_key": "AIzaSyD4JHy0lJk3pzRkBXc8XH9uEI-TSuT8fE0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "259972367503-p3f1pe2fhemi2muun3nt8tvkf9j3quqt.apps.googleusercontent.com",
+              "client_id": "77126962059-b7er67ie3svi06qevdde8kih3f4heqb3.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "259972367503-j0mhnqdhbi03tmid9nbpj5mbs1d4d6su.apps.googleusercontent.com",
+              "client_id": "77126962059-l8b5beqe6chp8hder2gj3qo7jh4gef5m.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.andrea17473.waylo"
