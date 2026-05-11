@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
     },
 });
 
-export const createAuthInstance = (token: string) => {
+export const createAuthInstance = (token?: string) => {
     const authInstance = axios.create({
         baseURL: BACKEND_URL,
         headers: {

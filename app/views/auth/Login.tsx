@@ -1,7 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useAuth } from '@/context/AuthContext';
 import { Redirect, useRouter } from 'expo-router';
-import { Keyboard, Platform, Pressable, TextInput, TouchableWithoutFeedback, useColorScheme, useWindowDimensions, View } from 'react-native';
+import { Alert, Keyboard, Platform, Pressable, TextInput, TouchableWithoutFeedback, useColorScheme, useWindowDimensions, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, withRepeat, Easing } from 'react-native-reanimated';
@@ -10,6 +10,8 @@ import BouncyPressable from '@/components/BouncyPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Colors } from '@/constants/theme';
+import { isValidEmail } from '@/utils/validation';
+import { firebaseAuthErrorMessage, loginWithEmail } from '@/service/AuthService';
 
 const Login = () => {
     const insets = useSafeAreaInsets();
@@ -71,6 +73,26 @@ const Login = () => {
         [scheme],
     );
 
+    const handleLogin = async () => {
+        if (!email || !password || email.trim() === '' || password.trim() === '' || !isValidEmail(email)) {
+            Alert.alert('Errore', 'Inserisci un\'email e una password valida.');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const cred = await loginWithEmail(email, password);
+            if (!cred.user.emailVerified) {
+                // router.replace('/(auth)/verify-email');
+                return;
+            }
+        } catch (error: any) {
+            Alert.alert('Accesso non riuscito', firebaseAuthErrorMessage(error?.code));
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     if (user) {
         return <Redirect href="/(tabs)" />;
     }
@@ -116,7 +138,7 @@ const Login = () => {
                             </Pressable>
                         </View>
 
-                        <BouncyPressable disabled={isLoading} onPress={() => { }} style={{ borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: scheme === 'light' ? '#111111' : '#FFFFFF' }}>
+                        <BouncyPressable isLoading={isLoading} disabled={isLoading} onPress={handleLogin} style={{ borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: scheme === 'light' ? '#111111' : '#FFFFFF' }}>
                             <ThemedText style={{ fontSize: 16, fontWeight: '700' }} lightColor={scheme === 'light' ? '#FFFFFF' : '#111111'} darkColor={scheme === 'light' ? '#FFFFFF' : '#111111'}>
                                 Accedi
                             </ThemedText>

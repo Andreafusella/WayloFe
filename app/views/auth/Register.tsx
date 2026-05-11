@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { auth } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { useCheckUsername } from '@/service/AuthService';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { useMemo, useState } from 'react';
@@ -23,6 +24,8 @@ const Register = () => {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { user } = useAuth();
+
+    // const { data: isUsernameAvailable, isLoading: isCheckingUsername, refetch: refetchUsername } = useCheckUsername('');
 
     const pageBg = useThemeColor({}, 'background');
     const primaryText = useThemeColor({}, 'text');
@@ -72,6 +75,7 @@ const Register = () => {
         }
         if (step === 1 && !username.trim()) {
             Alert.alert('Campo mancante', 'Inserisci uno username.');
+            // refetchUsername();
             return false;
         }
         if (step === 2 && !isValidIsoDate(birthDate.trim())) {
