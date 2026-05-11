@@ -1,7 +1,8 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useAuth } from '@/context/AuthContext';
 import { Redirect, useRouter } from 'expo-router';
-import { Alert, Keyboard, Platform, Pressable, TextInput, TouchableWithoutFeedback, useColorScheme, useWindowDimensions, View } from 'react-native';
+import type { AuthCredential } from 'firebase/auth';
+import { Alert, Keyboard, Modal, Platform, Pressable, TextInput, TouchableWithoutFeedback, useColorScheme, useWindowDimensions, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, withRepeat, Easing } from 'react-native-reanimated';
@@ -11,14 +12,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Colors } from '@/constants/theme';
 import { isValidEmail } from '@/utils/validation';
-import { firebaseAuthErrorMessage, loginWithEmail } from '@/service/AuthService';
+import {
+    firebaseAuthErrorMessage,
+    linkProviderWithEmailPassword,
+    loginWithApple,
+    loginWithEmail,
+    loginWithGoogle,
+    ProviderAccountExistsError,
+} from '@/service/AuthService';
+import ThemedTextInput from '@/components/ThemedTextInput';
+import { hapticNotification } from '@/utils/haptics';
 
 const Login = () => {
     const insets = useSafeAreaInsets();
     const { width: windowWidth } = useWindowDimensions();
     const scheme = useColorScheme() ?? 'light';
 
-    const { user } = useAuth();
+    const { authStatus } = useAuth();
     const router = useRouter();
 
     const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +40,10 @@ const Login = () => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    const [pendingLink, setPendingLink] = useState<{ email: string; pendingCredential: AuthCredential } | null>(null);
+    const [linkPassword, setLinkPassword] = useState('');
+    const [linkingBusy, setLinkingBusy] = useState(false);
 
     const translateX = useSharedValue(-windowWidth + 70);
 
@@ -81,20 +95,104 @@ const Login = () => {
 
         setIsLoading(true);
         try {
-            const cred = await loginWithEmail(email, password);
-            if (!cred.user.emailVerified) {
-                // router.replace('/(auth)/verify-email');
-                return;
-            }
-        } catch (error: any) {
-            Alert.alert('Accesso non riuscito', firebaseAuthErrorMessage(error?.code));
+            await loginWithEmail(email, password);
+        } catch (error: unknown) {
+            Alert.alert(
+                'Accesso non riuscito',
+                firebaseAuthErrorMessage(typeof error === 'object' && error !== null && 'code' in error ? (error as { code?: string }).code : undefined),
+            );
         } finally {
             setIsLoading(false);
         }
+        hapticNotification('success');
     }
 
-    if (user) {
-        return <Redirect href="/(tabs)" />;
+    // login con Apple
+    const handleAppleLogin = async () => {
+        if (Platform.OS !== 'ios') {
+            Alert.alert('Apple', 'Accedi con Apple è disponibile solo su iOS.');
+            return;
+        }
+
+        setIsLoading(true);
+        setSocialLoading('apple');
+        try {
+            await loginWithApple();
+        } catch (error: unknown) {
+            if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'ERR_REQUEST_CANCELED') {
+                return;
+            }
+            if (ProviderAccountExistsError.is(error)) {
+                setPendingLink({ email: error.linkedEmail, pendingCredential: error.pendingCredential });
+                return;
+            }
+            const message =
+                typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string'
+                    ? (error as { message: string }).message
+                    : "Impossibile completare l'accesso con Apple.";
+            Alert.alert('Errore Apple', message);
+        } finally {
+            setIsLoading(false);
+            setSocialLoading(null);
+        }
+    }
+
+    // login con Google
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setSocialLoading('google');
+        try {
+            await loginWithGoogle();
+        } catch (error: unknown) {
+            if (
+                typeof error === 'object' &&
+                error !== null &&
+                'code' in error &&
+                typeof (error as { code?: string }).code === 'string' &&
+                (error as { code?: string }).code === 'SIGN_IN_CANCELLED'
+            ) {
+                return;
+            }
+            if (ProviderAccountExistsError.is(error)) {
+                setPendingLink({ email: error.linkedEmail, pendingCredential: error.pendingCredential });
+                return;
+            }
+            Alert.alert(
+                'Errore Google',
+                firebaseAuthErrorMessage(
+                    typeof error === 'object' && error !== null && 'code' in error ? (error as { code?: string }).code : undefined,
+                ),
+            );
+        } finally {
+            setIsLoading(false);
+            setSocialLoading(null);
+        }
+    };
+
+    const handleCompleteAccountLink = async () => {
+        if (!pendingLink || linkPassword.trim() === '') {
+            Alert.alert('Password mancante', 'Inserisci la password del tuo account email per collegarlo.');
+            return;
+        }
+        setLinkingBusy(true);
+        try {
+            await linkProviderWithEmailPassword(pendingLink.email, linkPassword.trim(), pendingLink.pendingCredential);
+            setPendingLink(null);
+            setLinkPassword('');
+        } catch (error: unknown) {
+            Alert.alert(
+                'Collegamento fallito',
+                firebaseAuthErrorMessage(
+                    typeof error === 'object' && error !== null && 'code' in error ? (error as { code?: string }).code : undefined,
+                ),
+            );
+        } finally {
+            setLinkingBusy(false);
+        }
+    };
+
+    if (authStatus !== 'unauthenticated') {
+        return <Redirect href="/" />;
     }
 
     const inputPadV = Platform.OS === 'ios' ? 14 : 10;
@@ -113,7 +211,7 @@ const Login = () => {
                             </ThemedText>
                             <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: inputPadV, gap: 10, backgroundColor: palette.inputBg, borderColor: palette.border }}>
                                 <ThemedIcon name="mail-outline" size={20} lightColor={palette.muted} darkColor={palette.muted} />
-                                <TextInput value={email} onChangeText={setEmail} style={{ flex: 1, fontSize: 16, paddingVertical: 0, color: scheme === 'light' ? '#111' : '#FFF' }} placeholder="nome@email.com" placeholderTextColor={palette.muted} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} textContentType="emailAddress" />
+                                <ThemedTextInput hitSlop={8} value={email} onChangeText={setEmail} style={{ flex: 1, fontSize: 16, paddingVertical: 0, color: scheme === 'light' ? '#111' : '#FFF' }} placeholder="nome@email.com" placeholderTextColor={palette.muted} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} textContentType="emailAddress" />
                             </View>
                         </View>
 
@@ -123,7 +221,7 @@ const Login = () => {
                             </ThemedText>
                             <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: inputPadV, gap: 10, backgroundColor: palette.inputBg, borderColor: palette.border }}>
                                 <ThemedIcon name="lock-closed-outline" size={20} lightColor={palette.muted} darkColor={palette.muted} />
-                                <TextInput value={password} onChangeText={setPassword} style={{ flex: 1, fontSize: 16, paddingVertical: 0, color: scheme === 'light' ? '#111' : '#FFF' }} placeholder="••••••••" placeholderTextColor={palette.muted} secureTextEntry={!showPassword} textContentType="password" />
+                                <ThemedTextInput hitSlop={8} value={password} onChangeText={setPassword} style={{ flex: 1, fontSize: 16, paddingVertical: 0, color: scheme === 'light' ? '#111' : '#FFF' }} placeholder="••••••••" placeholderTextColor={palette.muted} secureTextEntry={!showPassword} textContentType="password" />
                                 <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={12} accessibilityRole="button" accessibilityLabel={showPassword ? 'Nascondi password' : 'Mostra password'}>
                                     <ThemedIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} lightColor={palette.muted} darkColor={palette.muted} />
                                 </Pressable>
@@ -148,7 +246,7 @@ const Login = () => {
                             <ThemedText style={{ fontSize: 14 }} >
                                 Non hai un account?
                             </ThemedText>
-                            <BouncyPressable hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                            <BouncyPressable haptic="medium" onPress={() => router.replace('/views/auth/Register')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                                 <ThemedText style={{ fontSize: 14, fontWeight: '700' }} lightColor={scheme === 'light' ? '#279CF5' : '#5EB8FF'} darkColor={scheme === 'light' ? '#279CF5' : '#5EB8FF'}>
                                     Registrati
                                 </ThemedText>
@@ -166,7 +264,7 @@ const Login = () => {
                         <View style={{ gap: 12 }}>
                             <BouncyPressable
                                 disabled={isLoading}
-                                onPress={() => { }}
+                                onPress={handleGoogleLogin}
                                 isLoading={isLoading && socialLoading === 'google'}
                                 loadingColor={loadingColor}
                                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderWidth: 1, borderRadius: 14, paddingVertical: 14, backgroundColor: palette.pageBg, borderColor: palette.border }}
@@ -179,7 +277,7 @@ const Login = () => {
                             {Platform.OS === 'ios' && (
                                 <BouncyPressable
                                     disabled={isLoading}
-                                    onPress={() => { }}
+                                    onPress={handleAppleLogin}
                                     isLoading={isLoading && socialLoading === 'apple'}
                                     loadingColor={loadingColor}
                                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderWidth: 1, borderRadius: 14, paddingVertical: 14, backgroundColor: palette.pageBg, borderColor: palette.border }}
@@ -194,9 +292,105 @@ const Login = () => {
                     </View>
                 </TouchableWithoutFeedback>
             </View>
-            <Animated.View pointerEvents="none" style={[animatedStyle, { position: 'absolute', bottom: Platform.OS === 'ios' ? 0 : insets.bottom, left: 0, right: 0, height: 220, zIndex: 99 }]} >
+            {/* <Animated.View pointerEvents="none" style={[animatedStyle, { position: 'absolute', bottom: Platform.OS === 'ios' ? 0 : insets.bottom, left: 0, right: 0, height: 220, zIndex: 99 }]} >
                 <LottieView source={require('@/assets/animation/walkPerson.json')} autoPlay loop style={{ flex: 1 }} resizeMode="contain" />
-            </Animated.View>
+            </Animated.View> */}
+
+            <Modal
+                transparent
+                visible={pendingLink !== null}
+                animationType="fade"
+                onRequestClose={() => {
+                    if (!linkingBusy) {
+                        setPendingLink(null);
+                        setLinkPassword('');
+                    }
+                }}
+            >
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Chiudi"
+                    style={{ flex: 1, backgroundColor: '#00000099', justifyContent: 'center', paddingHorizontal: 24 }}
+                    onPress={() => {
+                        if (!linkingBusy) {
+                            setPendingLink(null);
+                            setLinkPassword('');
+                        }
+                    }}
+                >
+                    <TouchableWithoutFeedback>
+                        <View
+                            style={{
+                                alignSelf: 'center',
+                                width: '100%',
+                                maxWidth: 380,
+                                backgroundColor: palette.pageBg,
+                                borderRadius: 16,
+                                padding: 20,
+                                gap: 12,
+                                borderWidth: 1,
+                                borderColor: palette.border,
+                            }}
+                        >
+                        <ThemedText style={{ fontSize: 18, fontWeight: '700', textAlign: 'center' }}>
+                            Account già registrato
+                        </ThemedText>
+                        <ThemedText style={{ fontSize: 14, lineHeight: 20, color: palette.muted }} lightColor={palette.muted} darkColor={palette.muted}>
+                            Esiste un account Waylo associato alla stessa email. Inserisci la password dell&apos;account email/password per collegarlo a questo accesso OAuth.
+                        </ThemedText>
+                        {pendingLink?.email ? (
+                            <ThemedText style={{ fontSize: 14, fontWeight: '600', textAlign: 'center' }}>{pendingLink.email}</ThemedText>
+                        ) : null}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: inputPadV, gap: 10, backgroundColor: palette.inputBg, borderColor: palette.border }}>
+                            <ThemedIcon name="lock-closed-outline" size={20} lightColor={palette.muted} darkColor={palette.muted} />
+                            <TextInput
+                                value={linkPassword}
+                                onChangeText={setLinkPassword}
+                                editable={!linkingBusy}
+                                style={{ flex: 1, fontSize: 16, paddingVertical: 0, color: scheme === 'light' ? '#111' : '#FFF' }}
+                                placeholder="Password account esistente"
+                                placeholderTextColor={palette.muted}
+                                secureTextEntry
+                                textContentType="password"
+                            />
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel="Annulla collegamento account"
+                                disabled={linkingBusy}
+                                onPress={() => {
+                                    setPendingLink(null);
+                                    setLinkPassword('');
+                                }}
+                                style={{ flex: 1, borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: palette.border }}
+                            >
+                                <ThemedText style={{ fontWeight: '600' }} lightColor={scheme === 'light' ? '#111' : '#FFF'} darkColor={scheme === 'light' ? '#111' : '#FFF'}>
+                                    Annulla
+                                </ThemedText>
+                            </Pressable>
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel="Conferma e collega account"
+                                disabled={linkingBusy}
+                                onPress={() => void handleCompleteAccountLink()}
+                                style={{
+                                    flex: 1,
+                                    borderRadius: 12,
+                                    paddingVertical: 14,
+                                    alignItems: 'center',
+                                    backgroundColor: scheme === 'light' ? '#111111' : '#FFFFFF',
+                                }}
+                            >
+                                <ThemedText style={{ fontWeight: '700' }} lightColor={scheme === 'light' ? '#FFFFFF' : '#111111'} darkColor={scheme === 'light' ? '#FFFFFF' : '#111111'}>
+                                    Collega
+                                </ThemedText>
+                            </Pressable>
+                        </View>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </Pressable>
+            </Modal>
         </View>
     );
 };
