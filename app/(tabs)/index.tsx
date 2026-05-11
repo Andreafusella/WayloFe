@@ -6,6 +6,8 @@ import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/ThemedText';
 import { Link } from 'expo-router';
+import BouncyPressable from '@/components/BouncyPressable';
+import { logout } from '@/service/AuthService';
 
 export default function HomeScreen() {
   return (
@@ -35,6 +37,9 @@ export default function HomeScreen() {
           </ThemedText>{' '}
           to open developer tools.
         </ThemedText>
+        <BouncyPressable onPress={() => logout()}>
+          <ThemedText type="subtitle">Logout</ThemedText>
+        </BouncyPressable>
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <Link href="/not-found">
