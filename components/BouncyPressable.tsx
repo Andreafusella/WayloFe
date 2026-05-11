@@ -3,6 +3,7 @@
  *   All rights reserved.
  *   Any form of copying or cloning of this code is strictly prohibited and will be criminally prosecuted.
  */
+import { hapticImpact, HapticImpactStyle, hapticNotification } from '@/utils/haptics';
 import React, { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -16,6 +17,7 @@ interface BouncyPressableProps {
     disabled?: boolean;
     isLoading?: boolean;
     loadingColor?: string;
+    haptic?: 'light' | 'normal' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'none' | 'success';
     hitSlop?: {
         top?: number;
         bottom?: number;
@@ -35,6 +37,7 @@ const BouncyPressable: React.FC<BouncyPressableProps> = ({
     isLoading,
     loadingColor,
     hitSlop,
+    haptic = 'light',
 }) => {
     const scale = useSharedValue(1);
 
@@ -52,9 +55,18 @@ const BouncyPressable: React.FC<BouncyPressableProps> = ({
         scale.value = withSpring(1, { damping: 15, stiffness: 200 });
     };
 
+    const handlePress = async () => {
+        if (haptic === 'success') {
+            hapticNotification('success');
+        } else {
+            hapticImpact(haptic as HapticImpactStyle);
+        }
+        onPress?.();
+    }
+
     return (
         <AnimatedPressable
-            onPress={onPress}
+            onPress={handlePress}
             onLongPress={onLongPress}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}

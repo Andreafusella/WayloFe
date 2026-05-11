@@ -1,6 +1,7 @@
 import { ThemedIcon } from '@/components/ThemedIcon';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/theme';
+import { hapticImpact } from '@/utils/haptics';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import dayjs from 'dayjs';
 import { useCallback, useMemo, useRef } from 'react';
@@ -124,6 +125,7 @@ function ThemedDatePicker(props: ThemedDatePickerProps) {
             : !props.startDate || !props.endDate;
 
     const openSheet = () => {
+        hapticImpact('light');
         if (props.disabled) {
             return;
         }
