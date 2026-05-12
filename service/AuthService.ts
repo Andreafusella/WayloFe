@@ -13,6 +13,7 @@ import {
     linkWithCredential,
     OAuthProvider,
     sendEmailVerification,
+    sendPasswordResetEmail,
     signInWithCredential,
     signInWithEmailAndPassword,
     signOut,
@@ -183,6 +184,11 @@ export const useRegister = () => {
 export const loginWithEmail = async (email: string, pass: string): Promise<UserCredential> => {
     return await signInWithEmailAndPassword(auth, email.trim(), pass);
 };
+
+/** Invio email di reset password (Firebase Authentication). Il completamento avviene dal link nell’email. */
+export async function sendPasswordResetForEmail(email: string): Promise<void> {
+    await sendPasswordResetEmail(auth, email.trim());
+}
 
 // registrazione con email e password
 export const signupWithEmail = async (email: string, pass: string): Promise<UserCredential> => {
