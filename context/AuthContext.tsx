@@ -3,8 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import { auth } from '@/config/firebaseConfig';
 import {
-    fetchAccountProfile,
-    type IUserInfo,
+  fetchAccountProfile,
+  type IUserInfo,
 } from '@/service/AuthService';
 
 /** Stato combinato Firebase + GET /account/me (profilo sul BE tramite firebaseId nel JWT). */

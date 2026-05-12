@@ -1,11 +1,11 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';

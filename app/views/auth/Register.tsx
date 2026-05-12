@@ -16,8 +16,7 @@ import { isAxiosError } from 'axios';
 import { Redirect, useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, TouchableWithoutFeedback, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function isValidIsoDate(s: string): boolean {
@@ -53,7 +52,7 @@ const Register = () => {
         [user],
     );
 
-    const totalSteps = isSocialSignup ? 4 : 5;
+    const totalSteps = isSocialSignup ? 3 : 4;
 
     const [step, setStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,16 +82,6 @@ const Register = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps -- evita di sovrascrivere mentre l&apos;utente digita
     }, [user?.uid]);
-
-    const translateY = useSharedValue(height + 70);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: translateY.value }],
-    }));
-
-    useEffect(() => {
-        translateY.value = withTiming(0, { duration: 600 });
-    }, [translateY]);
 
     if (authStatus !== 'needs_profile' && authStatus !== 'unauthenticated') {
         return <Redirect href="/" />;
@@ -206,21 +195,21 @@ const Register = () => {
 
     return (
         <View style={{ flex: 1, backgroundColor: pageBg }}>
-            {/* <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}> */}
-            {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}> */}
-            <ScrollView
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{
-                    flexGrow: 1,
-                    minHeight: height,
-                    paddingHorizontal: 24,
-                    paddingTop: insets.top + 20,
-                    paddingBottom: insets.bottom + 24,
-                }}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={{ width: '100%', maxWidth: 400, alignSelf: 'center', justifyContent: 'center', flex: 1 }} collapsable={false}>
-                    {/* <View style={{}}>
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                    <ScrollView
+                        keyboardShouldPersistTaps="handled"
+                        contentContainerStyle={{
+                            flexGrow: 1,
+                            minHeight: height,
+                            paddingHorizontal: 24,
+                            paddingTop: insets.top + 20,
+                            paddingBottom: insets.bottom + 24,
+                        }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={{ width: '100%', maxWidth: 400, alignSelf: 'center' }} collapsable={false}>
+                            <View style={{}}>
                                 <Pressable onPress={() => void goBack()} style={{ alignSelf: 'flex-start', marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 6 }} hitSlop={12}>
                                     <ThemedIcon name="chevron-back" size={22} lightColor={primaryText} darkColor={primaryText} />
                                     <ThemedText style={{ fontSize: 15, fontWeight: '600', color: primaryText }} lightColor={primaryText} darkColor={primaryText}>
@@ -231,144 +220,99 @@ const Register = () => {
                                 <ThemedText type="title" style={{ marginBottom: 30, fontSize: 32, lineHeight: 38, fontWeight: '700', letterSpacing: -0.5, textAlign: 'center', color: primaryText }} lightColor={primaryText} darkColor={primaryText}>
                                     Registrazione
                                 </ThemedText>
-                            </View> */}
+                            </View>
 
-                    {step === 0 && (
-                        <Animated.View style={[animatedStyle, { flex: 1, width: '100%', justifyContent: 'center', alignItems: 'stretch' }]}>
-                            <ThemedTextInput
-                                caretHidden
-                                hitSlop={8}
-                                value={name}
-                                onChangeText={setName}
-                                placeholder="Nome"
-                                placeholderTextColor={muted}
-                                autoCapitalize="words"
-                                textContentType="givenName"
-                                style={{ fontSize: 50, textAlign: 'center', width: '100%' }}
-                            />
-                            {name.length > 0 && (
-                                <View style={{ position: 'absolute', left: 0, right: 0, bottom: 100, width: '100%' }}
-                                >
-                                    <BouncyPressable disabled={name.trim() === ''} onPress={handleNext} style={ctaStyle}>
+                            {step === 0 && (
+                                <View>
+                                    <View style={{ marginBottom: 18 }}>
+                                        <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Nome</ThemedText>
+                                        <View style={fieldRowStyle}>
+                                            <ThemedIcon name="person-outline" size={20} lightColor={muted} darkColor={muted} />
+                                            <ThemedTextInput hitSlop={8} value={name} onChangeText={setName} style={inputStyle} placeholder="Nome" placeholderTextColor={muted} autoCapitalize="words" textContentType="givenName" />
+                                        </View>
+                                    </View>
+                                    <View style={{ marginBottom: 18 }}>
+                                        <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Cognome</ThemedText>
+                                        <View style={fieldRowStyle}>
+                                            <ThemedIcon name="person-outline" size={20} lightColor={muted} darkColor={muted} />
+                                            <ThemedTextInput hitSlop={8} value={lastName} onChangeText={setLastName} style={inputStyle} placeholder="Cognome" placeholderTextColor={muted} autoCapitalize="words" textContentType="familyName" />
+                                        </View>
+                                    </View>
+                                    <BouncyPressable disabled={name.trim() === '' || lastName.trim() === ''} onPress={handleNext} style={ctaStyle}>
                                         <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>Avanti</ThemedText>
                                     </BouncyPressable>
                                 </View>
                             )}
-                        </Animated.View>
-                        // <Animated.View style={[animatedStyle]}>
-                        //     <View style={{ marginBottom: 18 }}>
-                        //         <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Nome</ThemedText>
-                        //         <View style={fieldRowStyle}>
-                        //             <ThemedIcon name="person-outline" size={20} lightColor={muted} darkColor={muted} />
-                        //             <ThemedTextInput hitSlop={8} value={name} onChangeText={setName} style={inputStyle} placeholder="Nome" placeholderTextColor={muted} autoCapitalize="words" textContentType="givenName" />
-                        //         </View>
-                        //     </View>
-                        //     <View style={{ marginBottom: 18 }}>
-                        //         <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Cognome</ThemedText>
-                        //         <View style={fieldRowStyle}>
-                        //             <ThemedIcon name="person-outline" size={20} lightColor={muted} darkColor={muted} />
-                        //             <ThemedTextInput hitSlop={8} value={lastName} onChangeText={setLastName} style={inputStyle} placeholder="Cognome" placeholderTextColor={muted} autoCapitalize="words" textContentType="familyName" />
-                        //         </View>
-                        //     </View>
-                        //     <BouncyPressable disabled={name.trim() === '' || lastName.trim() === ''} onPress={handleNext} style={ctaStyle}>
-                        //         <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>Avanti</ThemedText>
-                        //     </BouncyPressable>
-                        // </Animated.View>
-                    )}
-
-                    {step === 1 && (
-                        <Animated.View style={[animatedStyle, { flex: 1, width: '100%', justifyContent: 'center', alignItems: 'stretch' }]}>
-                            <ThemedTextInput
-                                caretHidden
-                                hitSlop={8}
-                                value={lastName}
-                                onChangeText={setLastName}
-                                placeholder="Cognome"
-                                placeholderTextColor={muted}
-                                autoCapitalize="words"
-                                textContentType="familyName"
-                                style={{ fontSize: 50, textAlign: 'center' }}
-                            />
-                            {lastName.length > 0 && (
-                                <View style={{ position: 'absolute', left: 0, right: 0, bottom: 100, width: '100%' }}
-                                >
-                                    <BouncyPressable disabled={lastName.trim() === ''} onPress={handleNext} style={ctaStyle}>
+                            {step === 1 && (
+                                <>
+                                    <View style={{ marginBottom: 18 }}>
+                                        <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Username</ThemedText>
+                                        <View style={fieldRowStyle}>
+                                            <ThemedIcon name="at-outline" size={20} lightColor={muted} darkColor={muted} />
+                                            <ThemedTextInput hitSlop={8} value={username} onChangeText={setUsername} style={inputStyle} placeholder="username" placeholderTextColor={muted} autoCapitalize="none" autoCorrect={false} textContentType="username" />
+                                        </View>
+                                    </View>
+                                    <BouncyPressable disabled={username.trim() === ''} onPress={handleNext} style={ctaStyle}>
                                         <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>Avanti</ThemedText>
                                     </BouncyPressable>
-                                </View>
+                                </>
                             )}
-                        </Animated.View>
-                    )}
-                    {step === 2 && (
-                        <>
-                            <View style={{ marginBottom: 18 }}>
-                                <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Username</ThemedText>
-                                <View style={fieldRowStyle}>
-                                    <ThemedIcon name="at-outline" size={20} lightColor={muted} darkColor={muted} />
-                                    <ThemedTextInput hitSlop={8} value={username} onChangeText={setUsername} style={inputStyle} placeholder="username" placeholderTextColor={muted} autoCapitalize="none" autoCorrect={false} textContentType="username" />
-                                </View>
-                            </View>
-                            <BouncyPressable disabled={username.trim() === ''} onPress={handleNext} style={ctaStyle}>
-                                <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>Avanti</ThemedText>
-                            </BouncyPressable>
-                        </>
-                    )}
 
-                    {step === 3 && (
-                        <>
-                            <View style={{ marginBottom: 18 }}>
-                                <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Data di nascita</ThemedText>
-                                <ThemedDatePicker selectionMode="single" value={birthDate || undefined} onChange={(iso) => setBirthDate(iso)} minDate={new Date(1900, 0, 1)} maxDate={new Date()} />
-                            </View>
-                            <BouncyPressable disabled={!isValidIsoDate(birthDate.trim()) || isSubmitting} isLoading={isSocialSignup && isSubmitting} loadingColor={ctaFg} onPress={handleNext} style={ctaStyle}>
-                                <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>
-                                    {isSocialSignup ? (isSubmitting ? 'Completamento...' : 'Completa registrazione') : 'Avanti'}
-                                </ThemedText>
-                            </BouncyPressable>
-                        </>
-                    )}
+                            {step === 2 && (
+                                <>
+                                    <View style={{ marginBottom: 18 }}>
+                                        <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Data di nascita</ThemedText>
+                                        <ThemedDatePicker selectionMode="single" value={birthDate || undefined} onChange={(iso) => setBirthDate(iso)} minDate={new Date(1900, 0, 1)} maxDate={new Date()} />
+                                    </View>
+                                    <BouncyPressable disabled={!isValidIsoDate(birthDate.trim()) || isSubmitting} isLoading={isSocialSignup && isSubmitting} loadingColor={ctaFg} onPress={handleNext} style={ctaStyle}>
+                                        <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>
+                                            {isSocialSignup ? (isSubmitting ? 'Completamento...' : 'Completa registrazione') : 'Avanti'}
+                                        </ThemedText>
+                                    </BouncyPressable>
+                                </>
+                            )}
 
-                    {step === lastEmailStepIndex && !isSocialSignup && (
-                        <>
-                            <View style={{ marginBottom: 18 }}>
-                                <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>E-mail</ThemedText>
-                                <View style={fieldRowStyle}>
-                                    <ThemedIcon name="mail-outline" size={20} lightColor={muted} darkColor={muted} />
-                                    <ThemedTextInput hitSlop={8} value={email} onChangeText={setEmail} style={inputStyle} placeholder="nome@email.com" placeholderTextColor={muted} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} textContentType="emailAddress" />
-                                </View>
-                            </View>
-                            <View style={{ marginBottom: 18 }}>
-                                <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Password</ThemedText>
-                                <View style={fieldRowStyle}>
-                                    <ThemedIcon name="lock-closed-outline" size={20} lightColor={muted} darkColor={muted} />
-                                    <ThemedTextInput hitSlop={8} value={password} onChangeText={setPassword} style={inputStyle} placeholder="••••••••" placeholderTextColor={muted} secureTextEntry={!showPassword} textContentType="newPassword" />
-                                    <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={12} accessibilityRole="button" accessibilityLabel={showPassword ? 'Nascondi password' : 'Mostra password'}>
-                                        <ThemedIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} lightColor={muted} darkColor={muted} />
-                                    </Pressable>
-                                </View>
-                            </View>
-                            <View style={{ marginBottom: 24 }}>
-                                <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Conferma password</ThemedText>
-                                <View style={fieldRowStyle}>
-                                    <ThemedIcon name="lock-closed-outline" size={20} lightColor={muted} darkColor={muted} />
-                                    <ThemedTextInput hitSlop={8} value={confirmPassword} onChangeText={setConfirmPassword} style={inputStyle} placeholder="••••••••" placeholderTextColor={muted} secureTextEntry={!showPassword} textContentType="newPassword" />
-                                </View>
-                            </View>
-                            <BouncyPressable
-                                disabled={email.trim() === '' || password.trim() === '' || confirmPassword.trim() !== password.trim() || password.length < 6 || isSubmitting}
-                                isLoading={isSubmitting}
-                                loadingColor={ctaFg}
-                                onPress={() => void handleCreateEmailAccount()}
-                                style={ctaStyle}
-                            >
-                                <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>Crea account</ThemedText>
-                            </BouncyPressable>
-                        </>
-                    )}
-                </View>
-            </ScrollView>
-            {/* </TouchableWithoutFeedback> */}
-            {/* </KeyboardAvoidingView> */}
+                            {step === lastEmailStepIndex && !isSocialSignup && (
+                                <>
+                                    <View style={{ marginBottom: 18 }}>
+                                        <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>E-mail</ThemedText>
+                                        <View style={fieldRowStyle}>
+                                            <ThemedIcon name="mail-outline" size={20} lightColor={muted} darkColor={muted} />
+                                            <ThemedTextInput hitSlop={8} value={email} onChangeText={setEmail} style={inputStyle} placeholder="nome@email.com" placeholderTextColor={muted} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} textContentType="emailAddress" />
+                                        </View>
+                                    </View>
+                                    <View style={{ marginBottom: 18 }}>
+                                        <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Password</ThemedText>
+                                        <View style={fieldRowStyle}>
+                                            <ThemedIcon name="lock-closed-outline" size={20} lightColor={muted} darkColor={muted} />
+                                            <ThemedTextInput hitSlop={8} value={password} onChangeText={setPassword} style={inputStyle} placeholder="••••••••" placeholderTextColor={muted} secureTextEntry={!showPassword} textContentType="newPassword" />
+                                            <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={12} accessibilityRole="button" accessibilityLabel={showPassword ? 'Nascondi password' : 'Mostra password'}>
+                                                <ThemedIcon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} lightColor={muted} darkColor={muted} />
+                                            </Pressable>
+                                        </View>
+                                    </View>
+                                    <View style={{ marginBottom: 24 }}>
+                                        <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Conferma password</ThemedText>
+                                        <View style={fieldRowStyle}>
+                                            <ThemedIcon name="lock-closed-outline" size={20} lightColor={muted} darkColor={muted} />
+                                            <ThemedTextInput hitSlop={8} value={confirmPassword} onChangeText={setConfirmPassword} style={inputStyle} placeholder="••••••••" placeholderTextColor={muted} secureTextEntry={!showPassword} textContentType="newPassword" />
+                                        </View>
+                                    </View>
+                                    <BouncyPressable
+                                        disabled={email.trim() === '' || password.trim() === '' || confirmPassword.trim() !== password.trim() || password.length < 6 || isSubmitting}
+                                        isLoading={isSubmitting}
+                                        loadingColor={ctaFg}
+                                        onPress={() => void handleCreateEmailAccount()}
+                                        style={ctaStyle}
+                                    >
+                                        <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>Crea account</ThemedText>
+                                    </BouncyPressable>
+                                </>
+                            )}
+                        </View>
+                    </ScrollView>
+                </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
         </View>
     );
 };

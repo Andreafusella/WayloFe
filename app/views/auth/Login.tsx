@@ -1,17 +1,10 @@
-import { ThemedText } from '@/components/ThemedText';
-import { useAuth } from '@/context/AuthContext';
-import { Redirect, useRouter } from 'expo-router';
-import type { AuthCredential } from 'firebase/auth';
-import { Alert, Keyboard, Modal, Platform, Pressable, TextInput, TouchableWithoutFeedback, useColorScheme, useWindowDimensions, View } from 'react-native';
-import LottieView from 'lottie-react-native';
-import { useEffect, useMemo, useState } from 'react';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, withRepeat, Easing } from 'react-native-reanimated';
-import { ThemedIcon } from '@/components/ThemedIcon';
 import BouncyPressable from '@/components/BouncyPressable';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { ThemedIcon } from '@/components/ThemedIcon';
+import { ThemedText } from '@/components/ThemedText';
+import ThemedTextInput from '@/components/ThemedTextInput';
 import { Colors } from '@/constants/theme';
-import { isValidEmail } from '@/utils/validation';
+import { useAuth } from '@/context/AuthContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import {
     firebaseAuthErrorMessage,
     linkProviderWithEmailPassword,
@@ -20,8 +13,14 @@ import {
     loginWithGoogle,
     ProviderAccountExistsError,
 } from '@/service/AuthService';
-import ThemedTextInput from '@/components/ThemedTextInput';
 import { hapticNotification } from '@/utils/haptics';
+import { isValidEmail } from '@/utils/validation';
+import { Redirect, useRouter } from 'expo-router';
+import type { AuthCredential } from 'firebase/auth';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, Keyboard, Modal, Platform, Pressable, ScrollView, TextInput, TouchableWithoutFeedback, useColorScheme, useWindowDimensions, View } from 'react-native';
+import { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Login = () => {
     const insets = useSafeAreaInsets();
@@ -199,7 +198,7 @@ const Login = () => {
 
     return (
         <View style={{ flex: 1, backgroundColor: palette.pageBg }}>
-            <View style={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingTop: Math.max(insets.top, 24), paddingBottom: Math.max(insets.bottom, 32) }} >
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingTop: Math.max(insets.top, 24), paddingBottom: Math.max(insets.bottom, 32) }} >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                     <View style={{ width: '100%', maxWidth: 400, alignSelf: 'center' }} collapsable={false}>
                         <ThemedText type="title" style={{ marginBottom: 8, fontSize: 32, lineHeight: 38, fontWeight: '700', letterSpacing: -0.5, textAlign: 'center' }}>
@@ -229,7 +228,7 @@ const Login = () => {
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginTop: 4, marginBottom: 24 }}>
-                            <Pressable>
+                            <Pressable onPress={() => router.push('/views/auth/ForgotPassword')} accessibilityRole="link" accessibilityLabel="Password dimenticata">
                                 <ThemedText style={{ fontSize: 14, fontWeight: '700' }} lightColor={scheme === 'light' ? '#111' : '#FFF'} darkColor={scheme === 'light' ? '#111' : '#FFF'}>
                                     Password dimenticata?
                                 </ThemedText>
@@ -291,7 +290,7 @@ const Login = () => {
                         </View>
                     </View>
                 </TouchableWithoutFeedback>
-            </View>
+            </ScrollView>
             {/* <Animated.View pointerEvents="none" style={[animatedStyle, { position: 'absolute', bottom: Platform.OS === 'ios' ? 0 : insets.bottom, left: 0, right: 0, height: 220, zIndex: 99 }]} >
                 <LottieView source={require('@/assets/animation/walkPerson.json')} autoPlay loop style={{ flex: 1 }} resizeMode="contain" />
             </Animated.View> */}
