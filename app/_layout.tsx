@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthenticatedLocationPreciseGuard } from '@/components/AuthenticatedLocationPreciseGuard';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useState } from 'react';
 
@@ -44,11 +45,18 @@ function AppContent() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="views/auth/Login" options={{ animation: 'none' }} />
-      <Stack.Screen name="not-found" />
-    </Stack>
+    <>
+      <AuthenticatedLocationPreciseGuard />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="views/auth/Login" options={{ animation: 'none' }} />
+        <Stack.Screen
+          name="views/position/PositionRequest"
+          options={{ animation: 'none', gestureEnabled: false }}
+        />
+        <Stack.Screen name="not-found" />
+      </Stack>
+    </>
   );
 }
