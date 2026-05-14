@@ -8,6 +8,15 @@ import { useCallback, useMemo, useRef } from 'react';
 import { Pressable, StyleProp, useColorScheme, View, ViewStyle } from 'react-native';
 import DateTimePicker, { type DateType, useDefaultStyles } from 'react-native-ui-datepicker';
 
+/** Timestamp valido per stabilità nelle deps di react-native-ui-datepicker (evita loop su `minDate`/`maxDate`). */
+function datePropKey(d: DateType | undefined): string | undefined {
+    if (d == null || d === '') {
+        return undefined;
+    }
+    const p = dayjs(d);
+    return p.isValid() ? String(p.valueOf()) : String(d);
+}
+
 export type ThemedDatePickerSelectionMode = 'single' | 'range';
 
 type BaseProps = {
@@ -91,6 +100,46 @@ function ThemedDatePicker(props: ThemedDatePickerProps) {
             today: { borderColor: muted },
         };
     }, [scheme, defaultPickerStyles]);
+
+    const minKey = datePropKey(props.minDate);
+    const maxKey = datePropKey(props.maxDate);
+
+    const stableMinDate = useMemo(() => {
+        if (props.minDate == null || props.minDate === '') {
+            return undefined;
+        }
+        const p = dayjs(props.minDate);
+        return p.isValid() ? p.toDate() : undefined;
+    }, [minKey]);
+
+    const stableMaxDate = useMemo(() => {
+        if (props.maxDate == null || props.maxDate === '') {
+            return undefined;
+        }
+        const p = dayjs(props.maxDate);
+        return p.isValid() ? p.toDate() : undefined;
+    }, [maxKey]);
+
+    const stableSingleDate = useMemo(() => {
+        if (props.selectionMode !== 'single') {
+            return undefined;
+        }
+        return isoToDateType(props.value);
+    }, [props.selectionMode === 'single' ? props.value : undefined, props.selectionMode]);
+
+    const stableRangeStart = useMemo(() => {
+        if (props.selectionMode !== 'range') {
+            return undefined;
+        }
+        return isoToDateType(props.startDate);
+    }, [props.selectionMode === 'range' ? props.startDate : undefined, props.selectionMode]);
+
+    const stableRangeEnd = useMemo(() => {
+        if (props.selectionMode !== 'range') {
+            return undefined;
+        }
+        return isoToDateType(props.endDate);
+    }, [props.selectionMode === 'range' ? props.endDate : undefined, props.selectionMode]);
 
     const palette = useMemo(
         () =>
@@ -185,7 +234,7 @@ function ThemedDatePicker(props: ThemedDatePickerProps) {
                     {props.selectionMode === 'single' ? (
                         <DateTimePicker
                             mode="single"
-                            date={isoToDateType(props.value)}
+                            date={stableSingleDate}
                             onChange={({ date }) => {
                                 const iso = dateTypeToIso(date);
                                 if (iso) {
@@ -193,16 +242,16 @@ function ThemedDatePicker(props: ThemedDatePickerProps) {
                                     sheetRef.current?.dismiss();
                                 }
                             }}
-                            maxDate={props.maxDate}
-                            minDate={props.minDate}
+                            maxDate={stableMaxDate}
+                            minDate={stableMinDate}
                             styles={pickerStyles}
                             initialView="day"
                         />
                     ) : (
                         <DateTimePicker
                             mode="range"
-                            startDate={isoToDateType(props.startDate)}
-                            endDate={isoToDateType(props.endDate)}
+                            startDate={stableRangeStart}
+                            endDate={stableRangeEnd}
                             onChange={({ startDate, endDate }) => {
                                 const s = dateTypeToIso(startDate);
                                 const e = dateTypeToIso(endDate);
@@ -211,8 +260,8 @@ function ThemedDatePicker(props: ThemedDatePickerProps) {
                                     sheetRef.current?.dismiss();
                                 }
                             }}
-                            maxDate={props.maxDate}
-                            minDate={props.minDate}
+                            maxDate={stableMaxDate}
+                            minDate={stableMinDate}
                             styles={pickerStyles}
                             initialView="day"
                         />
