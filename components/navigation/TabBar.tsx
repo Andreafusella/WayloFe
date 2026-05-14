@@ -1,6 +1,5 @@
 import { useCallback, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -12,9 +11,8 @@ const PILL_SPRING = { damping: 20, stiffness: 250, mass: 0.8 };
 
 const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
     const insets = useSafeAreaInsets();
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
 
+    // Forziamo lo stile Light rimuovendo useColorScheme
     const focusedIndex = useSharedValue(state.index);
     const buttonWidth = useSharedValue(0);
 
@@ -22,9 +20,6 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
         focusedIndex.value = state.index;
     }, [state.index]);
 
-    // La larghezza va misurata sulla riga reale dei tab, non sul BlurView: altrimenti
-    // bordo/BlurView fanno sì che width/n ≠ larghezza effettiva di ogni slot e l'errore
-    // si accumula verso destra a ogni indice.
     const onTabRowLayout = useCallback(
         (e: { nativeEvent: { layout: { width: number } } }) => {
             const { width } = e.nativeEvent.layout;
@@ -36,8 +31,6 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
         [state.routes.length]
     );
 
-    // Il cerchio è centrato nello slot (larghezza = tab) e in verticale nel contenitore:
-    // coincide col centro del blocco icona+testo centrato con justifyContent:'center' su ogni tab
     const indicatorWrapperStyle = useAnimatedStyle(() => {
         const w = buttonWidth.value;
         return {
@@ -48,8 +41,7 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 
     const indicatorDiscStyle = useAnimatedStyle(() => {
         const w = buttonWidth.value;
-        // Cerchio mai più largo del tab; sempre quadrato (borderRadius = metà lato)
-        const d = Math.min(50, Math.max(32, w - 10));
+        const d = Math.min(48, Math.max(32, w - 12));
         return {
             width: d,
             height: d,
@@ -69,17 +61,11 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
     }, [state.routes, state.index, navigation]);
 
     return (
-        <View style={[styles.wrapper, { bottom: insets.bottom + 10  }]}>
+        <View style={[styles.wrapper, { bottom: insets.bottom + 15 }]}>
             <BlurView
-                intensity={isDark ? 90 : 80}
-                tint={isDark ? 'dark' : 'light'}
-                style={[
-                    styles.container,
-                    {
-                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
-                        backgroundColor: isDark ? 'rgba(31,31,31,0.4)' : 'rgba(255,255,255,0.4)',
-                    },
-                ]}
+                intensity={15} // Intensità ridotta per l'effetto "liquid" (più trasparente)
+                tint="light"
+                style={styles.container}
             >
                 <Animated.View style={[styles.indicatorWrapper, indicatorWrapperStyle]}>
                     <Animated.View style={[styles.indicator, indicatorDiscStyle]} />
@@ -96,9 +82,10 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
                                 index={index}
                                 focusedIndex={focusedIndex}
                                 onPress={handleTabPress}
-                                onLongPress={() => {}}
+                                onLongPress={() => { }}
                                 routeName={route.name}
-                                color={state.index === index ? '#fff' : (isDark ? '#BBB' : '#666')}
+                                // Colore icone: Oro quando attivo, Grigio scuro/semi-trasparente quando inattivo
+                                color={state.index === index ? '#FFFFFF' : 'rgba(0,0,0,0.4)'}
                                 label={typeof label === 'string' ? label : ''}
                             />
                         );
@@ -112,29 +99,32 @@ const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
 const styles = StyleSheet.create({
     wrapper: {
         position: 'absolute',
-        left: 25,
-        right: 25,
+        left: 30,
+        right: 30,
         alignItems: 'center',
+        // Ombra molto morbida e diffusa
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.2,
-        shadowRadius: 15,
-        elevation: 10,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 5,
     },
     container: {
         flexDirection: 'row',
         alignItems: 'stretch',
         width: '100%',
-        paddingVertical: 12,
-        borderRadius: 40,
-        borderWidth: 1,
+        paddingVertical: 10,
+        borderRadius: 50, // Più tonda per l'effetto "pillola"
+        borderWidth: 1.5,
+        // Bordo bianco semi-trasparente per simulare il riflesso del vetro
+        borderColor: 'rgba(255, 255, 255, 0.7)',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)', // Sfondo molto tenue
         overflow: 'hidden',
     },
     tabRow: {
         flex: 1,
-        minWidth: 0,
         flexDirection: 'row',
-        alignItems: 'stretch',
+        alignItems: 'center',
     },
     indicatorWrapper: {
         position: 'absolute',
@@ -144,7 +134,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     indicator: {
-        backgroundColor: '#D1992E',
+        backgroundColor: '#D1992E', // Il tuo color oro
+        // Effetto bagliore sotto l'indicatore
+        shadowColor: '#D1992E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
     },
 });
 
