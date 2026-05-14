@@ -52,6 +52,10 @@ const Register = () => {
         [user],
     );
 
+    /** Riferimenti stabili: `react-native-ui-datepicker` usa `minDate`/`maxDate` nelle deps di un `useEffect`. */
+    const birthMinDate = useMemo(() => new Date(1900, 0, 1), []);
+    const birthMaxDate = useMemo(() => new Date(), []);
+
     const totalSteps = isSocialSignup ? 3 : 4;
 
     const [step, setStep] = useState(0);
@@ -262,7 +266,7 @@ const Register = () => {
                                 <>
                                     <View style={{ marginBottom: 18 }}>
                                         <ThemedText style={labelStyle} lightColor={muted} darkColor={muted}>Data di nascita</ThemedText>
-                                        <ThemedDatePicker selectionMode="single" value={birthDate || undefined} onChange={(iso) => setBirthDate(iso)} minDate={new Date(1900, 0, 1)} maxDate={new Date()} />
+                                        <ThemedDatePicker selectionMode="single" value={birthDate || undefined} onChange={(iso) => setBirthDate(iso)} minDate={birthMinDate} maxDate={birthMaxDate} />
                                     </View>
                                     <BouncyPressable disabled={!isValidIsoDate(birthDate.trim()) || isSubmitting} isLoading={isSocialSignup && isSubmitting} loadingColor={ctaFg} onPress={handleNext} style={ctaStyle}>
                                         <ThemedText style={btnLabelStyle} lightColor={ctaFg} darkColor={ctaFg}>
