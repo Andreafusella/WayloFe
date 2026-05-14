@@ -20,6 +20,9 @@ export default {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSLocationWhenInUseUsageDescription: 'Waylo ha bisogno della tua posizione per funzionare.',
+        NSLocationTemporaryUsageDescriptionDictionary: {
+          PreciseLocation: 'Waylo usa la posizione precisa per la mappa e i servizi basati sulla tua area.',
+        },
       },
     },
     android: {
@@ -68,6 +71,12 @@ export default {
       ],
       ['@rnmapbox/maps', { RNMapboxMapsImpl: 'mapbox' }],
       'expo-secure-store',
+      [
+        'react-native-permissions',
+        {
+          iosPermissions: ['LocationWhenInUse', 'LocationAccuracy'],
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,
